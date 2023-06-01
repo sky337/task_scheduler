@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Task;
-
+use App\Models\User;
 
 class TaskController extends Controller
 {
@@ -17,7 +17,15 @@ class TaskController extends Controller
     {
         if(request()->ajax()){
 
-            $tasks=Task::all();
+            if (auth()->user()->hasRole('Super Admin')) {
+                // Admin can create task for any user
+                $tasks=Task::all();
+            } else {
+                // Regular user can create task for themselves only
+                $tasks=Task::where('user_id',auth()->user()->id)->get();
+            }
+
+           
     
             return datatables()->of($tasks)->addColumn('action',function($data){
     
@@ -43,7 +51,11 @@ class TaskController extends Controller
     public function create()
     {
         $tasks = new Task();
-        return view('task.create',compact('tasks'));
+        $users = User::whereHas('roles', function ($query) {
+            $query->where('name', 'Member');
+        })->get();
+    //    dd($users);
+        return view('task.create',compact('tasks','users'));
     }
 
     /**
@@ -60,6 +72,14 @@ class TaskController extends Controller
         $tasks->details = strip_tags($request->details);
         $tasks->status = 'PENDING';
         $tasks->type = $request->type;
+
+        if (auth()->user()->hasRole('Super Admin')) {
+            // Admin can create task for any user
+            $tasks->user_id = $request->user_id;
+        } else {
+            // Regular user can create task for themselves only
+            $tasks->user_id = auth()->user()->id;
+        }
         $tasks->save();
         // dd($tasks);
         return redirect()->route('task.index')->with('success','Task Created Successfully!');

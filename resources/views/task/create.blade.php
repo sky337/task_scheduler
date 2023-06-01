@@ -55,6 +55,21 @@
                                         </select>
                                     </div>
 
+                                    <div class="form-group">
+                                      
+                                        <select  class="form-control" name="user_id" id="user_id">
+                                            <option value="">Select a user</option>
+                                            @if (auth()->user()->hasRole('Super Admin'))
+                                            @foreach ($users as $user)
+                                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                            @endforeach
+                                            @else
+                                            <option value="{{ auth()->user()->id }}">Myself</option>
+                                        @endif
+                                        </select>
+                                       
+                                    </div>
+
 
                                     <div class="form-group text-right">
                                         <button type="submit" class="btn btn-primary">Save</button>
